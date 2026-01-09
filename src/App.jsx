@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap, AlertCircle, Pill, Clock, Droplet, CheckCircle, X } from 'lucide-react';
+import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap, AlertCircle, Pill, Clock, Droplet, CheckCircle, X, Scale } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 // SVG Avatar Components
 const NoahAvatar = ({ size = 80 }) => (
@@ -57,6 +58,9 @@ export default function App() {
 
   // Daily Logs - keyed by date (YYYY-MM-DD)
   const [dailyLogs, setDailyLogs] = useState({});
+
+  // Weights Array - for progress tracking
+  const [weights, setWeights] = useState([]);
 
   // Timer State
   const [timerActive, setTimerActive] = useState(false);
@@ -117,13 +121,42 @@ export default function App() {
 
   // Handle weight save
   const handleWeightSave = (weight) => {
+    const weightValue = parseFloat(weight);
+
+    // Update daily logs
     setDailyLogs({
       ...dailyLogs,
       [currentDate]: {
         ...getCurrentLog(),
-        weight: parseFloat(weight)
+        weight: weightValue
       }
     });
+
+    // Format date for weights array (Mon DD, YYYY)
+    const dateObj = new Date(currentDate + 'T00:00:00');
+    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    // Update weights array for progress chart
+    const existingIndex = weights.findIndex(w => w.date === formattedDate);
+
+    if (existingIndex !== -1) {
+      // Update existing entry
+      const updatedWeights = [...weights];
+      updatedWeights[existingIndex] = {
+        wt: weightValue,
+        date: formattedDate,
+        dose: userProfile.dose
+      };
+      setWeights(updatedWeights);
+    } else {
+      // Add new entry and sort by date
+      const newWeights = [...weights, {
+        wt: weightValue,
+        date: formattedDate,
+        dose: userProfile.dose
+      }].sort((a, b) => new Date(a.date) - new Date(b.date));
+      setWeights(newWeights);
+    }
   };
 
   // Handle end of day save
@@ -920,21 +953,161 @@ export default function App() {
     );
   };
 
-  // Progress View (Placeholder)
-  const Progress = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-      <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold">Progress</h1>
-      </div>
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <BarChart3 className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
-          <p className="text-gray-600">Your progress charts and insights will appear here</p>
+  // Progress View
+  const Progress = () => {
+    const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
+    const companionName = userProfile.companion === 'noah' ? 'Noah' : 'Noelia';
+
+    // Calculate stats
+    const startWeight = parseFloat(userProfile.currentWeight) || 0;
+    const goalWeight = parseFloat(userProfile.goalWeight) || 0;
+    const currentWeight = weights.length > 0 ? weights[weights.length - 1].wt : startWeight;
+    const weightLost = startWeight - currentWeight;
+    const percentToGoal = startWeight !== goalWeight
+      ? Math.round(((startWeight - currentWeight) / (startWeight - goalWeight)) * 100)
+      : 0;
+    const daysTracked = weights.length;
+    const streak = calculateStreak();
+
+    // Detect dose changes for reference lines
+    const doseChanges = [];
+    weights.forEach((entry, index) => {
+      if (index > 0 && entry.dose !== weights[index - 1].dose) {
+        doseChanges.push({
+          date: entry.date,
+          dose: entry.dose
+        });
+      }
+    });
+
+    // Get personality-based message
+    const getPersonalityMessage = () => {
+      const personality = userProfile.personality;
+      const weightLostStr = Math.abs(weightLost).toFixed(1);
+
+      switch (personality) {
+        case 'motivational':
+          return `Amazing! You've logged ${daysTracked} weights and ${weightLost >= 0 ? 'lost' : 'gained'} ${weightLostStr} lbs! Every entry shows your commitment! 💪`;
+        case 'straightforward':
+          return `Progress: ${weightLost >= 0 ? '-' : '+'}${weightLostStr} lbs over ${daysTracked} entries. Current trajectory ${percentToGoal >= 50 ? 'on track' : 'developing'}.`;
+        case 'caring':
+          return `So proud of you! You've ${weightLost >= 0 ? 'lost' : 'gained'} ${weightLostStr} lbs. Remember to be kind to yourself on this journey. 💙`;
+        case 'scientific':
+          return `Data shows ${weightLost >= 0 ? '-' : '+'}${weightLostStr} lbs over ${daysTracked} data points. Adherence rate: ${Math.round((streak / daysTracked) * 100)}%. Dose correlation positive.`;
+        default:
+          return `Great progress! You've tracked ${daysTracked} weights and ${weightLost >= 0 ? 'lost' : 'gained'} ${weightLostStr} lbs!`;
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 shadow-lg">
+          <h1 className="text-2xl font-bold">Progress & Dosing</h1>
+        </div>
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          {/* Weight Chart */}
+          {weights.length >= 2 ? (
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Weight Over Time</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={weights}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    style={{ fontSize: '12px' }}
+                  />
+                  <YAxis
+                    domain={[
+                      dataMin => Math.floor(dataMin - 5),
+                      dataMax => Math.ceil(dataMax + 5)
+                    ]}
+                    style={{ fontSize: '12px' }}
+                    label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="wt"
+                    stroke="#3B82F6"
+                    strokeWidth={2}
+                    dot={{ fill: '#3B82F6', r: 4 }}
+                    name="Weight (lbs)"
+                  />
+                  {/* Dose change indicators */}
+                  {doseChanges.map((change, idx) => (
+                    <ReferenceLine
+                      key={idx}
+                      x={change.date}
+                      stroke="#10B981"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: `${change.dose}`,
+                        position: 'top',
+                        fill: '#10B981',
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            /* Empty State */
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+              <Scale className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Start Tracking</h2>
+              <p className="text-gray-600">Log your weight regularly to see your progress chart!</p>
+            </div>
+          )}
+
+          {/* Progress Summary */}
+          {weights.length >= 1 && (
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Progress Summary</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {weightLost >= 0 ? '-' : '+'}{Math.abs(weightLost).toFixed(1)}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">lbs lost</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">{percentToGoal}%</div>
+                  <div className="text-sm text-gray-600 mt-1">to goal</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">{daysTracked}</div>
+                  <div className="text-sm text-gray-600 mt-1">days tracked</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-600">{streak}</div>
+                  <div className="text-sm text-gray-600 mt-1">day streak</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Analysis */}
+          {weights.length >= 1 && (
+            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl shadow-lg p-6 border-2 border-blue-200">
+              <div className="flex items-start gap-4">
+                <CompanionAvatar size={60} />
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    Dr. {companionName}'s Analysis
+                  </h3>
+                  <p className="text-gray-700">
+                    {getPersonalityMessage()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Chat View (Placeholder)
   const Chat = () => (
