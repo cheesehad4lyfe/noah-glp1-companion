@@ -41,6 +41,8 @@ export default function App() {
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [showEndOfDayModal, setShowEndOfDayModal] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   // User Profile
   const [userProfile, setUserProfile] = useState({
@@ -160,6 +162,167 @@ export default function App() {
   const handleCancelTimer = () => {
     setTimerActive(false);
     setTimeRemaining(1800);
+  };
+
+  // Calendar functions
+  const handleDateClick = (dateStr) => {
+    setCurrentDate(dateStr);
+    setShowCalendar(false);
+  };
+
+  const handleOpenCalendar = () => {
+    // Set calendar month to the currently selected date
+    setCalendarMonth(new Date(currentDate + 'T00:00:00'));
+    setShowCalendar(true);
+  };
+
+  // Calendar Component
+  const Calendar = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+
+    // Get days in month and first day of week
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+
+    // Generate calendar days
+    const calendarDays = [];
+
+    // Add empty cells for days before month starts
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      calendarDays.push(null);
+    }
+
+    // Add all days in month
+    for (let day = 1; day <= daysInMonth; day++) {
+      calendarDays.push(day);
+    }
+
+    // Navigate month
+    const navigateMonth = (direction) => {
+      const newDate = new Date(calendarMonth);
+      newDate.setMonth(newDate.getMonth() + direction);
+      setCalendarMonth(newDate);
+    };
+
+    // Get date string for a day
+    const getDateStr = (day) => {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    };
+
+    // Check if date is in future
+    const isFuture = (dateStr) => {
+      return dateStr > today;
+    };
+
+    // Check if date has data
+    const hasData = (dateStr) => {
+      return dailyLogs[dateStr];
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigateMonth(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <ChevronLeft className="w-6 h-6 text-gray-700" />
+            </button>
+            <h2 className="text-xl font-bold text-gray-900">
+              {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </h2>
+            <button
+              onClick={() => navigateMonth(1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <ChevronRight className="w-6 h-6 text-gray-700" />
+            </button>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="mb-4">
+            {/* Days of week header */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="text-center text-xs font-semibold text-gray-500 py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, index) => {
+                if (day === null) {
+                  return <div key={`empty-${index}`} className="aspect-square" />;
+                }
+
+                const dateStr = getDateStr(day);
+                const isToday = dateStr === today;
+                const isSelected = dateStr === currentDate;
+                const isFutureDate = isFuture(dateStr);
+                const data = hasData(dateStr);
+                const hasPill = data?.pillTaken;
+                const hasWeight = data?.weight;
+
+                return (
+                  <button
+                    key={day}
+                    onClick={() => !isFutureDate && handleDateClick(dateStr)}
+                    disabled={isFutureDate}
+                    className={`aspect-square rounded-lg flex flex-col items-center justify-center text-sm font-medium transition relative ${
+                      isSelected
+                        ? 'bg-blue-600 text-white'
+                        : isToday
+                        ? 'bg-blue-100 text-blue-700'
+                        : isFutureDate
+                        ? 'text-gray-300 cursor-not-allowed opacity-30'
+                        : 'text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span>{day}</span>
+                    {!isFutureDate && (hasPill || hasWeight) && (
+                      <div className="flex gap-1 absolute bottom-1">
+                        {hasPill && (
+                          <div className="w-1 h-1 rounded-full bg-green-500" />
+                        )}
+                        {hasWeight && (
+                          <div className="w-1 h-1 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-4 mb-4 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>Pill logged</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Weight logged</span>
+            </div>
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={() => setShowCalendar(false)}
+            className="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // Onboarding Component
@@ -586,12 +749,15 @@ export default function App() {
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
-              <div className="text-center">
+              <button
+                onClick={handleOpenCalendar}
+                className="text-center px-4 py-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition"
+              >
                 <div className="text-xl font-bold">{formatDate(currentDate).primary}</div>
                 {formatDate(currentDate).secondary && (
                   <div className="text-sm opacity-90">{formatDate(currentDate).secondary}</div>
                 )}
-              </div>
+              </button>
               <button
                 onClick={() => navigateDate(1)}
                 disabled={currentDate >= new Date().toISOString().split('T')[0]}
@@ -875,6 +1041,7 @@ export default function App() {
       {view === 'profile' && <Profile />}
       {view !== 'onboarding' && <BottomNav />}
       {showEndOfDayModal && <EndOfDayModal />}
+      {showCalendar && <Calendar />}
     </>
   );
 }
