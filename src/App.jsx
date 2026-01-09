@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap, AlertCircle, Pill, Clock, Droplet, CheckCircle, X } from 'lucide-react';
 
 // SVG Avatar Components
 const NoahAvatar = ({ size = 80 }) => (
@@ -147,13 +147,19 @@ export default function App() {
   const formatDate = (dateStr) => {
     const date = new Date(dateStr + 'T00:00:00');
     const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-    if (dateStr === today) return 'Today';
-    if (dateStr === yesterdayStr) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (dateStr === today) return { primary: 'Today', secondary: '' };
+
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    return { primary: weekday, secondary: formatted };
+  };
+
+  // Cancel timer
+  const handleCancelTimer = () => {
+    setTimerActive(false);
+    setTimeRemaining(1800);
   };
 
   // Onboarding Component
@@ -557,31 +563,39 @@ export default function App() {
         {/* Header with Date Navigation and Streak */}
         <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 shadow-lg">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => setView('home')}
-                className="flex items-center gap-2 hover:opacity-80 transition"
+                className="flex items-center gap-3 hover:opacity-80 transition"
               >
-                <CompanionAvatar size={40} />
-                <span className="font-medium">Dr. {userProfile.companion === 'noah' ? 'Noah' : 'Noelia'}</span>
+                <CompanionAvatar size={50} />
+                <div className="text-left">
+                  <div className="font-medium text-sm opacity-90">Dr. {userProfile.companion === 'noah' ? 'Noah' : 'Noelia'}</div>
+                  <div className="font-bold text-lg">Hey {userProfile.name}!</div>
+                </div>
               </button>
               <div className="flex items-center gap-2 bg-white bg-opacity-20 px-4 py-2 rounded-full">
                 <Zap className="w-5 h-5 text-yellow-300" />
-                <span className="font-bold text-lg">{streak} Day Streak</span>
+                <span className="font-bold text-lg">{streak}</span>
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between bg-white bg-opacity-20 rounded-xl px-4 py-3">
               <button
                 onClick={() => navigateDate(-1)}
-                className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition"
+                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
-              <h2 className="text-xl font-bold">{formatDate(currentDate)}</h2>
+              <div className="text-center">
+                <div className="text-xl font-bold">{formatDate(currentDate).primary}</div>
+                {formatDate(currentDate).secondary && (
+                  <div className="text-sm opacity-90">{formatDate(currentDate).secondary}</div>
+                )}
+              </div>
               <button
                 onClick={() => navigateDate(1)}
                 disabled={currentDate >= new Date().toISOString().split('T')[0]}
-                className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition disabled:opacity-50"
+                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition disabled:opacity-30"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -592,36 +606,71 @@ export default function App() {
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           {/* Pill Tracker */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Daily Pill Tracker</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Daily Pill</h3>
+              <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                {userProfile.dose}
+              </span>
+            </div>
 
             {!currentLog.pillTaken ? (
-              <button
-                onClick={handlePillTaken}
-                className="w-full py-4 bg-gradient-to-r from-blue-500 to-green-500 text-white font-bold text-lg rounded-xl hover:opacity-90 transition shadow-md"
-              >
-                I Took My Pill
-              </button>
+              /* STATE 1 - Not Taken */
+              <div>
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1">
+                      Ready for your {userProfile.dose} pill?
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Take with ≤4oz water on empty stomach, wait 30 min
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handlePillTaken}
+                  className="w-full py-4 bg-gradient-to-r from-blue-500 to-green-500 text-white font-bold text-lg rounded-xl hover:opacity-90 transition shadow-md flex items-center justify-center gap-2"
+                >
+                  <Pill className="w-6 h-6" />
+                  I took my pill - Start 30 min timer
+                </button>
+              </div>
             ) : timerActive ? (
-              <div className="text-center">
-                <div className="text-5xl font-bold text-blue-600 mb-4">
-                  {formatTime(timeRemaining)}
+              /* STATE 2 - Timer Active */
+              <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-6 border-2 border-orange-300">
+                <div className="text-center mb-4">
+                  <Clock className="w-16 h-16 text-orange-600 mx-auto mb-3" />
+                  <div className="text-6xl font-bold text-orange-600 mb-2">
+                    {formatTime(timeRemaining)}
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">
+                    No food or drinking (except small sips)
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-gray-700">
+                    <Droplet className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm">Less than 4oz water only</span>
+                  </div>
                 </div>
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-2">
-                  <p className="font-medium text-gray-900 mb-1">No food or drinking except small sips</p>
-                  <p className="text-gray-600">Less than 4oz water only</p>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-white bg-opacity-50 rounded-full h-3 mb-4">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all"
+                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
                     style={{ width: `${((1800 - timeRemaining) / 1800) * 100}%` }}
                   />
                 </div>
+                <button
+                  onClick={handleCancelTimer}
+                  className="w-full py-2 bg-white bg-opacity-70 text-gray-700 text-sm font-medium rounded-lg hover:bg-opacity-90 transition flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel timer
+                </button>
               </div>
             ) : (
-              <div className="text-center bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                <div className="text-4xl mb-2">✅</div>
-                <h4 className="text-xl font-bold text-green-700 mb-2">Great job!</h4>
-                <p className="text-gray-700">You can eat and drink normally</p>
+              /* STATE 3 - Completed */
+              <div className="text-center bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-8">
+                <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-3" />
+                <h4 className="text-2xl font-bold text-green-700 mb-2">Great job! 🎉</h4>
+                <p className="text-gray-700 text-lg">You can eat and drink normally now</p>
               </div>
             )}
           </div>
