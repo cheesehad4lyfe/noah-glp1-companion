@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap, AlertCircle, Pill, Clock, Droplet, CheckCircle, X, Scale } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, Home, BarChart3, MessageCircle, User, ChevronLeft, ChevronRight, Zap, AlertCircle, Pill, Clock, Droplet, CheckCircle, X, Scale, Send, Download, Trash2, Lock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 // SVG Avatar Components
@@ -66,6 +66,13 @@ export default function App() {
   const [milestonesShown, setMilestonesShown] = useState([]);
   const [showMilestone, setShowMilestone] = useState(false);
   const [currentMilestone, setCurrentMilestone] = useState(null);
+
+  // Chat messages
+  const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
+
+  // Toast notifications
+  const [toasts, setToasts] = useState([]);
 
   // Timer State
   const [timerActive, setTimerActive] = useState(false);
@@ -168,6 +175,9 @@ export default function App() {
 
     // Check for milestones after a brief delay
     setTimeout(() => checkMilestones(), 500);
+
+    // Show success toast
+    showToast('Weight saved!');
   };
 
   // Handle end of day save
@@ -180,6 +190,7 @@ export default function App() {
       }
     });
     setShowEndOfDayModal(false);
+    showToast('Check-in saved!');
   };
 
   // Navigate date
@@ -206,6 +217,74 @@ export default function App() {
   const handleCancelTimer = () => {
     setTimerActive(false);
     setTimeRemaining(1800);
+  };
+
+  // Toast notification function
+  const showToast = (message, type = 'success') => {
+    const id = Date.now();
+    const newToast = { id, message, type };
+    setToasts(prev => [...prev, newToast]);
+
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  };
+
+  // Chat functions
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const getAIResponse = (userMessage) => {
+    const msg = userMessage.toLowerCase();
+
+    if (msg.includes('side effect') || msg.includes('nausea') || msg.includes('symptom')) {
+      return "Common side effects like nausea usually peak 24-72 hours after taking your pill. They often improve as your body adjusts. Try eating smaller, bland meals and staying hydrated. If symptoms are severe or persistent, contact your doctor.";
+    }
+
+    if (msg.includes('progress') || msg.includes('weight') || msg.includes('doing')) {
+      const startWeight = parseFloat(userProfile.currentWeight) || 0;
+      const currentWeight = weights.length > 0 ? weights[weights.length - 1].wt : startWeight;
+      const progress = startWeight - currentWeight;
+      const streak = calculateStreak();
+
+      return `You've logged ${weights.length} weight entries and have a ${streak} day streak!${weights.length > 1 && progress > 0 ? ` You're ${progress.toFixed(1)} lbs down from your starting weight - that's amazing progress!` : ' Keep tracking consistently to see trends develop.'}`;
+    }
+
+    if (msg.includes('dose') || msg.includes('increase') || msg.includes('titration') || msg.includes('mg')) {
+      return `Wegovy dosing typically starts at 1.5mg and increases every 30 days: 1.5mg → 4mg → 9mg → 25mg (maintenance). This gradual increase helps your body adjust and reduces side effects. You're currently on ${userProfile.dose}.`;
+    }
+
+    if (msg.includes('tired') || msg.includes('fatigue') || msg.includes('energy')) {
+      return "Fatigue is common, especially in the first few weeks. Stay hydrated and get enough protein. Your energy levels should improve as your body adjusts. Track your energy in the end-of-day check-in to monitor patterns.";
+    }
+
+    if (msg.includes('hungry') || msg.includes('appetite') || msg.includes('craving') || msg.includes('food')) {
+      return "Wegovy works by reducing appetite and slowing digestion. It's normal to feel less hungry. Focus on protein-rich foods and eat when genuinely hungry. Track your hunger levels daily to monitor the medication's effect.";
+    }
+
+    if (msg.includes('water') || msg.includes('hydration') || msg.includes('drink')) {
+      return "Stay well-hydrated! Aim for 8+ glasses of water daily. Remember: after taking your pill, wait 30 minutes before drinking more than 4oz. Proper hydration helps manage side effects and supports overall health.";
+    }
+
+    return "I'm here to help with questions about Wegovy, tracking your progress, or managing side effects. What would you like to know? You can ask about common side effects, dosing schedules, or check on your progress.";
+  };
+
+  const sendMessage = (content) => {
+    if (!content.trim()) return;
+
+    // Add user message
+    setMessages(prev => [...prev, { role: 'user', content }]);
+
+    // Show typing indicator
+    setTimeout(() => {
+      const response = getAIResponse(content);
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    }, 1000);
   };
 
   // Check for milestones
@@ -1332,64 +1411,331 @@ export default function App() {
     );
   };
 
-  // Chat View (Placeholder)
-  const Chat = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-      <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold">Chat with {userProfile.companion === 'noah' ? 'Dr. Noah' : 'Dr. Noelia'}</h1>
-      </div>
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <MessageCircle className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
-          <p className="text-gray-600">Chat with your AI companion for support and advice</p>
-        </div>
-      </div>
-    </div>
-  );
+  // Chat View
+  const Chat = () => {
+    const [inputMessage, setInputMessage] = useState('');
+    const companionName = userProfile.companion === 'noah' ? 'Noah' : 'Noelia';
+    const AvatarComponent = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
 
-  // Profile View (Placeholder)
-  const Profile = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-      <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold">Profile</h1>
-      </div>
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <div className="text-center mb-6">
-            {userProfile.companion === 'noah' ? <NoahAvatar size={100} /> : <NoeliaAvatar size={100} />}
-            <h2 className="text-2xl font-bold text-gray-900 mt-4">{userProfile.name}</h2>
-          </div>
-          <div className="space-y-3">
-            <div className="flex justify-between py-3 border-b">
-              <span className="text-gray-600">Companion:</span>
-              <span className="font-medium">Dr. {userProfile.companion === 'noah' ? 'Noah' : 'Noelia'}</span>
-            </div>
-            <div className="flex justify-between py-3 border-b">
-              <span className="text-gray-600">Personality:</span>
-              <span className="font-medium capitalize">{userProfile.personality}</span>
-            </div>
-            <div className="flex justify-between py-3 border-b">
-              <span className="text-gray-600">Daily Reminder:</span>
-              <span className="font-medium">{userProfile.reminderTime}</span>
-            </div>
-            <div className="flex justify-between py-3 border-b">
-              <span className="text-gray-600">Current Dose:</span>
-              <span className="font-medium">{userProfile.dose}</span>
-            </div>
-            <div className="flex justify-between py-3 border-b">
-              <span className="text-gray-600">Starting Weight:</span>
-              <span className="font-medium">{userProfile.currentWeight} lbs</span>
-            </div>
-            <div className="flex justify-between py-3">
-              <span className="text-gray-600">Goal Weight:</span>
-              <span className="font-medium">{userProfile.goalWeight} lbs</span>
+    const quickStartQuestions = [
+      "What are common side effects?",
+      "How do I manage nausea?",
+      "When should I increase my dose?"
+    ];
+
+    const handleSend = () => {
+      if (inputMessage.trim()) {
+        sendMessage(inputMessage);
+        setInputMessage('');
+      }
+    };
+
+    const handleQuickQuestion = (question) => {
+      sendMessage(question);
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 md:p-6 shadow-lg">
+          <div className="max-w-4xl mx-auto flex items-center gap-3 md:gap-4">
+            <AvatarComponent size={50} />
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold">Dr. {companionName}</h1>
+              <p className="text-sm md:text-base text-blue-100">Your GLP-1 companion</p>
             </div>
           </div>
         </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+            {messages.length === 0 ? (
+              // Empty State
+              <div className="text-center py-12 md:py-16">
+                <MessageCircle className="w-16 h-16 md:w-20 md:h-20 text-blue-400 mx-auto mb-4" />
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+                  Start a conversation
+                </h2>
+                <p className="text-gray-600 mb-6 md:mb-8 text-sm md:text-base">
+                  Ask Dr. {companionName} anything about your GLP-1 journey
+                </p>
+                <div className="space-y-3 max-w-md mx-auto">
+                  {quickStartQuestions.map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleQuickQuestion(question)}
+                      className="w-full bg-white border-2 border-blue-200 text-blue-700 px-4 md:px-6 py-3 md:py-4 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all text-sm md:text-base font-medium"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Messages
+              <>
+                {messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] md:max-w-[75%] px-4 md:px-6 py-3 md:py-4 rounded-2xl ${
+                        msg.role === 'user'
+                          ? 'bg-blue-600 text-white rounded-br-sm'
+                          : 'bg-white text-gray-800 shadow-md rounded-bl-sm'
+                      }`}
+                    >
+                      <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Input Area */}
+        <div className="bg-white border-t border-gray-200 p-4 md:p-6">
+          <div className="max-w-4xl mx-auto flex gap-2 md:gap-3">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder={`Ask Dr. ${companionName} anything...`}
+              className="flex-1 px-4 md:px-6 py-3 md:py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-sm md:text-base"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!inputMessage.trim()}
+              className="bg-blue-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <Send className="w-5 h-5" />
+              <span className="hidden md:inline">Send</span>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  // Settings/Profile View
+  const Profile = () => {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const AvatarComponent = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
+    const companionName = userProfile.companion === 'noah' ? 'Noah' : 'Noelia';
+
+    const handleExportData = () => {
+      const exportData = {
+        profile: userProfile,
+        dailyLogs: dailyLogs,
+        weights: weights,
+        milestonesShown: milestonesShown,
+        exportDate: new Date().toISOString()
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `noah-data-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      showToast('Data exported successfully!');
+    };
+
+    const handleDeleteAllData = () => {
+      setDailyLogs({});
+      setWeights([]);
+      setMilestonesShown([]);
+      setMessages([]);
+      setShowDeleteConfirm(false);
+      showToast('All data deleted', 'error');
+    };
+
+    const totalDaysTracked = Object.keys(dailyLogs).length;
+    const totalPillsTaken = Object.values(dailyLogs).filter(log => log.pillTaken).length;
+    const currentStreak = calculateStreak();
+    const currentWeight = weights.length > 0 ? weights[weights.length - 1].wt : userProfile.currentWeight;
+    const weightLost = parseFloat(userProfile.currentWeight) - parseFloat(currentWeight);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 md:p-6 shadow-lg">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-2xl md:text-3xl font-bold">Settings & Profile</h1>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+          {/* Profile Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <AvatarComponent size={100} />
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{userProfile.name}</h2>
+                <p className="text-lg text-gray-600">Working with Dr. {companionName}</p>
+                <p className="text-sm text-gray-500 mt-1 capitalize">{userProfile.personality} personality</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Your Journey</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <div className="text-center p-4 bg-blue-50 rounded-xl">
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{totalDaysTracked}</div>
+                <div className="text-xs md:text-sm text-gray-600 mt-1">Days Tracked</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-xl">
+                <div className="text-2xl md:text-3xl font-bold text-green-600">{currentStreak}</div>
+                <div className="text-xs md:text-sm text-gray-600 mt-1">Day Streak</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-xl">
+                <div className="text-2xl md:text-3xl font-bold text-purple-600">{totalPillsTaken}</div>
+                <div className="text-xs md:text-sm text-gray-600 mt-1">Pills Taken</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-xl">
+                <div className="text-2xl md:text-3xl font-bold text-orange-600">{weightLost.toFixed(1)}</div>
+                <div className="text-xs md:text-sm text-gray-600 mt-1">lbs Lost</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Details */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Profile Details</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center py-3 border-b">
+                <span className="text-gray-600">Current Dose</span>
+                <span className="font-semibold text-gray-900">{userProfile.dose}</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b">
+                <span className="text-gray-600">Starting Weight</span>
+                <span className="font-semibold text-gray-900">{userProfile.currentWeight} lbs</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b">
+                <span className="text-gray-600">Current Weight</span>
+                <span className="font-semibold text-gray-900">{currentWeight} lbs</span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <span className="text-gray-600">Goal Weight</span>
+                <span className="font-semibold text-gray-900">{userProfile.goalWeight} lbs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Reminder Settings */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Daily Reminder</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-700 font-medium">Reminder Time</p>
+                <p className="text-sm text-gray-500">Get notified to take your pill</p>
+              </div>
+              <div className="text-2xl font-bold text-blue-600">{userProfile.reminderTime}</div>
+            </div>
+          </div>
+
+          {/* Data Management */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Data Management</h3>
+            <div className="space-y-4">
+              <button
+                onClick={handleExportData}
+                className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-blue-300 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Export Your Data</div>
+                    <div className="text-sm text-gray-500">Download all your tracking data as JSON</div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+              </button>
+
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full flex items-center justify-between p-4 border-2 border-red-200 rounded-xl hover:bg-red-50 hover:border-red-400 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                  <div className="text-left">
+                    <div className="font-semibold text-red-900">Delete All Data</div>
+                    <div className="text-sm text-red-600">Permanently remove all tracking data</div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-red-400 group-hover:text-red-600" />
+              </button>
+            </div>
+          </div>
+
+          {/* Privacy & Security */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Lock className="w-6 h-6 text-gray-700" />
+              Privacy & Security
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              All your data is stored locally on your device. Noah does not send any personal health information to external servers. Your privacy and security are our top priority.
+            </p>
+          </div>
+
+          {/* About */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">About Noah</h3>
+            <p className="text-gray-600 leading-relaxed mb-3">
+              Noah is your personal GLP-1 companion app, designed to help you track your medication, monitor your progress, and stay motivated on your health journey.
+            </p>
+            <p className="text-sm text-gray-500">
+              Version 1.0.0 • Made with <Heart className="w-4 h-4 inline text-red-500" /> for GLP-1 users
+            </p>
+          </div>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Delete All Data?</h2>
+                <p className="text-gray-600">
+                  This will permanently delete all your tracking data, including daily logs, weight entries, and milestones. This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAllData}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                >
+                  Delete All
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Bottom Navigation
   const BottomNav = () => (
@@ -1439,6 +1785,28 @@ export default function App() {
       {showEndOfDayModal && <EndOfDayModal />}
       {showCalendar && <Calendar />}
       {showMilestone && <MilestoneModal />}
+
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-6 py-4 rounded-xl shadow-lg transform transition-all duration-300 animate-slide-in ${
+              toast.type === 'success'
+                ? 'bg-green-600 text-white'
+                : toast.type === 'error'
+                ? 'bg-red-600 text-white'
+                : 'bg-blue-600 text-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5" />}
+              <span className="font-medium">{toast.message}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
