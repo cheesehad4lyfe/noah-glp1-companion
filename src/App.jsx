@@ -62,6 +62,11 @@ export default function App() {
   // Weights Array - for progress tracking
   const [weights, setWeights] = useState([]);
 
+  // Milestones tracking
+  const [milestonesShown, setMilestonesShown] = useState([]);
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState(null);
+
   // Timer State
   const [timerActive, setTimerActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes in seconds
@@ -117,6 +122,9 @@ export default function App() {
     });
     setTimerActive(true);
     setTimeRemaining(1800);
+
+    // Check for milestones after a brief delay
+    setTimeout(() => checkMilestones(), 500);
   };
 
   // Handle weight save
@@ -157,6 +165,9 @@ export default function App() {
       }].sort((a, b) => new Date(a.date) - new Date(b.date));
       setWeights(newWeights);
     }
+
+    // Check for milestones after a brief delay
+    setTimeout(() => checkMilestones(), 500);
   };
 
   // Handle end of day save
@@ -195,6 +206,97 @@ export default function App() {
   const handleCancelTimer = () => {
     setTimerActive(false);
     setTimeRemaining(1800);
+  };
+
+  // Check for milestones
+  const checkMilestones = () => {
+    const milestones = [];
+
+    // Calculate current stats
+    const pillEntries = Object.values(dailyLogs).filter(log => log.pillTaken);
+    const streak = calculateStreak();
+    const startWeight = parseFloat(userProfile.currentWeight) || 0;
+    const currentWeight = weights.length > 0 ? weights[weights.length - 1].wt : startWeight;
+    const weightLost = startWeight - currentWeight;
+    const goalWeight = parseFloat(userProfile.goalWeight) || 0;
+    const halfwayPoint = (startWeight - goalWeight) / 2;
+
+    // First pill
+    if (pillEntries.length === 1 && !milestonesShown.includes('first-pill')) {
+      milestones.push({
+        id: 'first-pill',
+        emoji: '🎉',
+        title: 'First Pill Logged!',
+        message: 'Great start! You took your first step on this journey!'
+      });
+    }
+
+    // 7 day streak
+    if (streak === 7 && !milestonesShown.includes('first-week')) {
+      milestones.push({
+        id: 'first-week',
+        emoji: '🔥',
+        title: 'First Week Complete!',
+        message: 'You logged 7 days in a row! Consistency is key!'
+      });
+    }
+
+    // 30 day streak
+    if (streak === 30 && !milestonesShown.includes('thirty-days')) {
+      milestones.push({
+        id: 'thirty-days',
+        emoji: '🏆',
+        title: '30 Day Streak!',
+        message: 'One month of consistent tracking! You\'re crushing it!'
+      });
+    }
+
+    // 5 lbs lost
+    if (weightLost >= 5 && !milestonesShown.includes('five-lbs')) {
+      milestones.push({
+        id: 'five-lbs',
+        emoji: '🎉',
+        title: '5 Pounds Lost!',
+        message: 'You\'ve lost 5 pounds! Your hard work is paying off!'
+      });
+    }
+
+    // 10 lbs lost
+    if (weightLost >= 10 && !milestonesShown.includes('ten-lbs')) {
+      milestones.push({
+        id: 'ten-lbs',
+        emoji: '🔥',
+        title: '10 Pounds Lost!',
+        message: 'Double digits! You\'ve lost 10 pounds! Amazing progress!'
+      });
+    }
+
+    // 20 lbs lost
+    if (weightLost >= 20 && !milestonesShown.includes('twenty-lbs')) {
+      milestones.push({
+        id: 'twenty-lbs',
+        emoji: '🏆',
+        title: '20 Pounds Lost!',
+        message: 'Incredible! 20 pounds down! You\'re an inspiration!'
+      });
+    }
+
+    // Halfway to goal
+    if (weightLost >= halfwayPoint && halfwayPoint > 0 && !milestonesShown.includes('halfway-goal')) {
+      milestones.push({
+        id: 'halfway-goal',
+        emoji: '🏆',
+        title: 'Halfway There!',
+        message: 'You\'re halfway to your goal weight! Keep going!'
+      });
+    }
+
+    // Show first milestone if any
+    if (milestones.length > 0) {
+      setCurrentMilestone(milestones[0]);
+      setShowMilestone(true);
+      setMilestonesShown([...milestonesShown, milestones[0].id]);
+    }
   };
 
   // Calendar functions
@@ -746,6 +848,119 @@ export default function App() {
     );
   };
 
+  // Milestone Modal
+  const MilestoneModal = () => {
+    if (!currentMilestone) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center animate-bounce-in">
+          <div className="text-6xl mb-4">{currentMilestone.emoji}</div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">{currentMilestone.title}</h2>
+          <p className="text-lg text-gray-700 mb-6">{currentMilestone.message}</p>
+          <button
+            onClick={() => setShowMilestone(false)}
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-green-500 text-white font-bold text-lg rounded-xl hover:opacity-90 transition shadow-md"
+          >
+            Awesome!
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Daily Insight Card
+  const DailyInsight = () => {
+    const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
+    const companionName = userProfile.companion === 'noah' ? 'Noah' : 'Noelia';
+    const personality = userProfile.personality;
+
+    // Calculate stats
+    const startWeight = parseFloat(userProfile.currentWeight) || 0;
+    const currentWeight = weights.length > 0 ? weights[weights.length - 1].wt : startWeight;
+    const weightLost = startWeight - currentWeight;
+    const streak = calculateStreak();
+    const entries = weights.length;
+
+    // Determine message based on conditions
+    let message = '';
+
+    if (weights.length > 1 && weightLost > 0) {
+      // Has weight progress
+      const progress = weightLost.toFixed(1);
+      const dose = userProfile.dose;
+
+      switch (personality) {
+        case 'motivational':
+          message = `Amazing work! You're ${progress} lbs down with a ${streak} day streak! Every pill counts! 💪`;
+          break;
+        case 'straightforward':
+          message = `Progress: -${progress} lbs. Streak: ${streak} days. Current dose: ${dose}. Continue protocol.`;
+          break;
+        case 'caring':
+          message = `I'm so proud of you! You've lost ${progress} lbs and logged ${streak} days straight. You're doing beautifully! 💙`;
+          break;
+        case 'scientific':
+          message = `Data: -${progress} lbs over ${entries} entries. ${streak}-day adherence. Consistent with expected GLP-1 response patterns.`;
+          break;
+        default:
+          message = `Great progress! You're ${progress} lbs down with a ${streak} day streak!`;
+      }
+    } else if (streak > 0) {
+      // Has streak but no weight loss yet
+      switch (personality) {
+        case 'motivational':
+          message = `${streak} day streak! Keep it going! Every day brings you closer to your goal! 🌟`;
+          break;
+        case 'straightforward':
+          message = `Adherence: ${streak} consecutive days. Maintain consistency for optimal results.`;
+          break;
+        case 'caring':
+          message = `You're doing great! ${streak} days of showing up for yourself. That's something to be proud of! 💙`;
+          break;
+        case 'scientific':
+          message = `${streak}-day continuous adherence. Data quality improves with consistent logging.`;
+          break;
+        default:
+          message = `${streak} day streak! Keep it up!`;
+      }
+    } else {
+      // No data yet
+      switch (personality) {
+        case 'motivational':
+          message = 'Start your journey today! Take your pill and log it to begin your streak! You got this! 🚀';
+          break;
+        case 'straightforward':
+          message = 'Begin tracking to establish baseline data. Take pill and log weight.';
+          break;
+        case 'caring':
+          message = 'Welcome! I\'m here to support you every step of the way. Let\'s start with today\'s pill. 💙';
+          break;
+        case 'scientific':
+          message = 'Initiating tracking protocol. Consistent data entry critical for trend analysis.';
+          break;
+        default:
+          message = 'Welcome! Let\'s start tracking your journey today.';
+      }
+    }
+
+    return (
+      <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl shadow-lg p-4 border-2 border-blue-200">
+        <div className="flex items-start gap-3">
+          <CompanionAvatar size={50} />
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-gray-900 mb-1">
+              Dr. {companionName}
+            </h3>
+            <p className="text-sm text-gray-700">
+              {message}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Home/Dashboard Component
   const Home = () => {
     const currentLog = getCurrentLog();
@@ -803,6 +1018,9 @@ export default function App() {
         </div>
 
         <div className="max-w-4xl mx-auto p-4 space-y-4">
+          {/* Daily Insight */}
+          <DailyInsight />
+
           {/* Pill Tracker */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1215,6 +1433,7 @@ export default function App() {
       {view !== 'onboarding' && <BottomNav />}
       {showEndOfDayModal && <EndOfDayModal />}
       {showCalendar && <Calendar />}
+      {showMilestone && <MilestoneModal />}
     </>
   );
 }
