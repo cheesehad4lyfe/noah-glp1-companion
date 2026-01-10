@@ -1049,10 +1049,10 @@ export default function App() {
     const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 md:pb-24">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
         {/* Header with Date Navigation and Streak */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 md:p-8 shadow-lg">
-          <div className="max-w-6xl mx-auto">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => setView('home')}
@@ -1061,12 +1061,12 @@ export default function App() {
                 <CompanionAvatar size={50} />
                 <div className="text-left">
                   <div className="font-medium text-sm opacity-90">Dr. {userProfile.companion === 'noah' ? 'Noah' : 'Noelia'}</div>
-                  <div className="font-bold text-lg">Hey {userProfile.name}!</div>
+                  <div className="font-bold text-xl">Hey {userProfile.name}!</div>
                 </div>
               </button>
-              <div className="flex items-center gap-2 bg-white bg-opacity-20 px-4 py-2 rounded-full">
-                <Zap className="w-5 h-5 text-yellow-300" />
-                <span className="font-bold text-lg">{streak}</span>
+              <div className="flex items-center gap-2 bg-white bg-opacity-20 px-5 py-3 rounded-full">
+                <Zap className="w-6 h-6 text-yellow-300" />
+                <span className="font-bold text-xl">{streak} day streak</span>
               </div>
             </div>
             <div className="flex items-center justify-between bg-white bg-opacity-20 rounded-xl px-4 py-3">
@@ -1096,12 +1096,12 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px]">
           {/* Daily Insight */}
           <DailyInsight />
 
-          {/* Main Content Grid - Two columns on desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Main Content Grid - Three columns on desktop, responsive */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             {/* Pill Tracker */}
             <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <div className="flex items-center justify-between mb-4">
@@ -1202,47 +1202,52 @@ export default function App() {
                 </p>
               )}
             </div>
+            {/* End of Day Check-in Card */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col justify-center">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Daily Check-in</h3>
+              <button
+                onClick={() => setShowEndOfDayModal(true)}
+                className="w-full py-4 bg-gradient-to-r from-blue-500 to-green-500 text-white font-bold text-lg rounded-xl hover:opacity-90 transition shadow-md"
+              >
+                Complete Check-in
+              </button>
+              <p className="text-sm text-gray-500 mt-3 text-center">
+                Track workout, symptoms, hunger & energy
+              </p>
+            </div>
           </div>
 
-          {/* End of Day Check-in */}
-          <button
-            onClick={() => setShowEndOfDayModal(true)}
-            className="w-full py-4 bg-white border-2 border-blue-500 text-blue-600 font-bold text-lg rounded-xl hover:bg-blue-50 transition shadow-md"
-          >
-            End of Day Check-in
-          </button>
-
-          {/* Daily Summary */}
+          {/* Daily Summary - Full Width */}
           {currentLog.workout !== undefined && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Today's Summary</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Workout:</span>
-                  <span className="font-medium">{currentLog.workout ? 'Yes ✅' : 'No'}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-600 mb-1">Workout:</span>
+                  <span className="font-medium text-lg">{currentLog.workout ? 'Yes ✅' : 'No'}</span>
                 </div>
-                {currentLog.symptoms && currentLog.symptoms.length > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Symptoms:</span>
-                    <span className="font-medium">{currentLog.symptoms.join(', ')}</span>
-                  </div>
-                )}
                 {currentLog.hungerLevel && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Hunger Level:</span>
-                    <span className="font-medium">{currentLog.hungerLevel}/10</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 mb-1">Hunger Level:</span>
+                    <span className="font-medium text-lg">{currentLog.hungerLevel}/10</span>
                   </div>
                 )}
                 {currentLog.energyLevel && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Energy Level:</span>
-                    <span className="font-medium">{currentLog.energyLevel}/10</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 mb-1">Energy Level:</span>
+                    <span className="font-medium text-lg">{currentLog.energyLevel}/10</span>
+                  </div>
+                )}
+                {currentLog.symptoms && currentLog.symptoms.length > 0 && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 mb-1">Symptoms:</span>
+                    <span className="font-medium text-base">{currentLog.symptoms.join(', ')}</span>
                   </div>
                 )}
                 {currentLog.notes && (
-                  <div>
-                    <span className="text-gray-600">Notes:</span>
-                    <p className="text-gray-900 mt-1">{currentLog.notes}</p>
+                  <div className="flex flex-col col-span-2">
+                    <span className="text-gray-600 mb-1">Notes:</span>
+                    <p className="text-gray-900">{currentLog.notes}</p>
                   </div>
                 )}
               </div>
@@ -1300,13 +1305,13 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 md:pb-24">
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 md:p-8 shadow-lg">
-          <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
             <h1 className="text-3xl md:text-4xl font-bold">Progress & Dosing</h1>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px] space-y-6">
           {/* Weight Chart */}
           {weights.length >= 2 ? (
             <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
@@ -1437,8 +1442,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 md:p-6 shadow-lg">
-          <div className="max-w-4xl mx-auto flex items-center gap-3 md:gap-4">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1400px] flex items-center gap-3 md:gap-4">
             <AvatarComponent size={50} />
             <div>
               <h1 className="text-xl md:text-2xl font-bold">Dr. {companionName}</h1>
@@ -1449,7 +1454,7 @@ export default function App() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+          <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1400px] space-y-4">
             {messages.length === 0 ? (
               // Empty State
               <div className="text-center py-12 md:py-16">
@@ -1501,7 +1506,7 @@ export default function App() {
 
         {/* Input Area */}
         <div className="bg-white border-t border-gray-200 p-4 md:p-6">
-          <div className="max-w-4xl mx-auto flex gap-2 md:gap-3">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1400px] flex gap-2 md:gap-3">
             <input
               type="text"
               value={inputMessage}
@@ -1569,13 +1574,14 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 md:p-6 shadow-lg">
-          <div className="max-w-6xl mx-auto">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
             <h1 className="text-2xl md:text-3xl font-bold">Settings & Profile</h1>
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -1700,6 +1706,7 @@ export default function App() {
             <p className="text-sm text-gray-500">
               Version 1.0.0 • Made with <Heart className="w-4 h-4 inline text-red-500" /> for GLP-1 users
             </p>
+          </div>
           </div>
         </div>
 
