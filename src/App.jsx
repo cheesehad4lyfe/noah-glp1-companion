@@ -358,7 +358,7 @@ export default function App() {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-6">
             <button
@@ -493,8 +493,8 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-        <div className="max-w-2xl mx-auto py-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 md:p-8">
+        <div className="max-w-3xl mx-auto py-8 md:py-16">
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
@@ -509,16 +509,16 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-xl p-8">
+          <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
             {/* Step 1: Name */}
             {onboardingStep === 1 && (
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl mb-6 shadow-lg">
-                  <Heart className="w-10 h-10 text-white" />
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl mb-6 shadow-lg">
+                  <Heart className="w-12 h-12 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Noah!</h2>
-                <p className="text-lg text-gray-600 mb-8">Let's get to know you better</p>
-                <div className="max-w-md mx-auto">
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Noah!</h2>
+                <p className="text-xl text-gray-600 mb-8">Let's get to know you better</p>
+                <div className="max-w-lg mx-auto">
                   <label className="block text-left text-sm font-medium text-gray-700 mb-2">
                     What's your name?
                   </label>
@@ -945,14 +945,14 @@ export default function App() {
     }
 
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl shadow-lg p-4 border-2 border-blue-200">
-        <div className="flex items-start gap-3">
-          <CompanionAvatar size={50} />
+      <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl shadow-lg p-6 md:p-8 border-2 border-blue-200">
+        <div className="flex items-start gap-4 md:gap-6">
+          <CompanionAvatar size={60} />
           <div className="flex-1">
-            <h3 className="text-sm font-bold text-gray-900 mb-1">
+            <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2">
               Dr. {companionName}
             </h3>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm md:text-base text-gray-700 leading-relaxed">
               {message}
             </p>
           </div>
@@ -970,10 +970,10 @@ export default function App() {
     const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 md:pb-24">
         {/* Header with Date Navigation and Streak */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 shadow-lg">
-          <div className="max-w-4xl mx-auto">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 md:p-8 shadow-lg">
+          <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => setView('home')}
@@ -1017,12 +1017,14 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto p-4 space-y-4">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
           {/* Daily Insight */}
           <DailyInsight />
 
-          {/* Pill Tracker */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          {/* Main Content Grid - Two columns on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pill Tracker */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">Daily Pill</h3>
               <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
@@ -1090,11 +1092,11 @@ export default function App() {
                 <p className="text-gray-700 text-lg">You can eat and drink normally now</p>
               </div>
             )}
-          </div>
+            </div>
 
-          {/* Weight Logging */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Today's Weight</h3>
+            {/* Weight Logging */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Today's Weight</h3>
             <div className="flex gap-3">
               <input
                 type="number"
@@ -1115,11 +1117,12 @@ export default function App() {
                 Save
               </button>
             </div>
-            {currentLog.weight && (
-              <p className="text-sm text-green-600 mt-2 font-medium">
-                Logged: {currentLog.weight} lbs
-              </p>
-            )}
+              {currentLog.weight && (
+                <p className="text-sm text-green-600 mt-2 font-medium">
+                  Logged: {currentLog.weight} lbs
+                </p>
+              )}
+            </div>
           </div>
 
           {/* End of Day Check-in */}
@@ -1218,16 +1221,18 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 shadow-lg">
-          <h1 className="text-2xl font-bold">Progress & Dosing</h1>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 md:pb-24">
+        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 md:p-8 shadow-lg">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-3xl md:text-4xl font-bold">Progress & Dosing</h1>
+          </div>
         </div>
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
           {/* Weight Chart */}
           {weights.length >= 2 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Weight Over Time</h2>
-              <ResponsiveContainer width="100%" height={300}>
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Weight Over Time</h2>
+              <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={weights}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
@@ -1388,35 +1393,35 @@ export default function App() {
 
   // Bottom Navigation
   const BottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
-      <div className="max-w-4xl mx-auto flex justify-around">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 md:py-4 shadow-lg z-40">
+      <div className="max-w-6xl mx-auto flex justify-around md:justify-center md:gap-12">
         <button
           onClick={() => setView('home')}
-          className={`flex flex-col items-center gap-1 py-2 px-4 ${view === 'home' ? 'text-blue-600' : 'text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'home' ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <Home className="w-6 h-6" />
-          <span className="text-xs font-medium">Home</span>
+          <Home className="w-6 h-6 md:w-7 md:h-7" />
+          <span className="text-xs md:text-sm font-medium">Home</span>
         </button>
         <button
           onClick={() => setView('progress')}
-          className={`flex flex-col items-center gap-1 py-2 px-4 ${view === 'progress' ? 'text-blue-600' : 'text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'progress' ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <BarChart3 className="w-6 h-6" />
-          <span className="text-xs font-medium">Progress</span>
+          <BarChart3 className="w-6 h-6 md:w-7 md:h-7" />
+          <span className="text-xs md:text-sm font-medium">Progress</span>
         </button>
         <button
           onClick={() => setView('chat')}
-          className={`flex flex-col items-center gap-1 py-2 px-4 ${view === 'chat' ? 'text-blue-600' : 'text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'chat' ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <MessageCircle className="w-6 h-6" />
-          <span className="text-xs font-medium">Chat</span>
+          <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+          <span className="text-xs md:text-sm font-medium">Chat</span>
         </button>
         <button
           onClick={() => setView('profile')}
-          className={`flex flex-col items-center gap-1 py-2 px-4 ${view === 'profile' ? 'text-blue-600' : 'text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'profile' ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <User className="w-6 h-6" />
-          <span className="text-xs font-medium">Profile</span>
+          <User className="w-6 h-6 md:w-7 md:h-7" />
+          <span className="text-xs md:text-sm font-medium">Profile</span>
         </button>
       </div>
     </div>
