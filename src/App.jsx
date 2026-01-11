@@ -1049,59 +1049,44 @@ export default function App() {
     const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-        {/* Header with Date Navigation and Streak */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
-          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => setView('home')}
-                className="flex items-center gap-3 hover:opacity-80 transition"
-              >
-                <CompanionAvatar size={50} />
-                <div className="text-left">
-                  <div className="font-medium text-sm opacity-90">Dr. {userProfile.companion === 'noah' ? 'Noah' : 'Noelia'}</div>
-                  <div className="font-bold text-xl">Hey {userProfile.name}!</div>
-                </div>
-              </button>
-              <div className="flex items-center gap-2 bg-white bg-opacity-20 px-5 py-3 rounded-full">
-                <Zap className="w-6 h-6 text-yellow-300" />
-                <span className="font-bold text-xl">{streak} day streak</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between bg-white bg-opacity-20 rounded-xl px-4 py-3">
+      <div className="min-h-screen bg-gray-50">
+        {/* Date Navigation Bar */}
+        <div className="bg-white border-b border-gray-200 py-4 px-8">
+          <div className="max-w-full mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => navigateDate(-1)}
-                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition"
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
               <button
                 onClick={handleOpenCalendar}
-                className="text-center px-4 py-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition"
+                className="px-4 py-2 hover:bg-gray-100 rounded-lg transition"
               >
-                <div className="text-xl font-bold">{formatDate(currentDate).primary}</div>
-                {formatDate(currentDate).secondary && (
-                  <div className="text-sm opacity-90">{formatDate(currentDate).secondary}</div>
-                )}
+                <div className="text-lg font-semibold text-gray-900">{formatDate(currentDate).primary}</div>
               </button>
               <button
                 onClick={() => navigateDate(1)}
                 disabled={currentDate >= new Date().toISOString().split('T')[0]}
-                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition disabled:opacity-30"
+                className="p-2 hover:bg-gray-100 rounded-lg transition disabled:opacity-30"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 text-gray-600" />
               </button>
+            </div>
+            <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-4 py-2 rounded-lg">
+              <Zap className="w-5 h-5 text-yellow-600" />
+              <span className="font-semibold text-gray-900">{streak} day streak</span>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px]">
+        <div className="px-8 py-6">
           {/* Daily Insight */}
           <DailyInsight />
 
-          {/* Main Content Grid - Three columns on desktop, responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* Main Content Grid - Proper full width grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6">
             {/* Pill Tracker */}
             <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <div className="flex items-center justify-between mb-4">
@@ -1744,41 +1729,84 @@ export default function App() {
     );
   };
 
-  // Bottom Navigation
-  const BottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 md:py-4 shadow-lg z-40">
-      <div className="max-w-6xl mx-auto flex justify-around md:justify-center md:gap-12">
-        <button
-          onClick={() => setView('home')}
-          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'home' ? 'text-blue-600' : 'text-gray-600'}`}
-        >
-          <Home className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="text-xs md:text-sm font-medium">Home</span>
-        </button>
-        <button
-          onClick={() => setView('progress')}
-          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'progress' ? 'text-blue-600' : 'text-gray-600'}`}
-        >
-          <BarChart3 className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="text-xs md:text-sm font-medium">Progress</span>
-        </button>
-        <button
-          onClick={() => setView('chat')}
-          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'chat' ? 'text-blue-600' : 'text-gray-600'}`}
-        >
-          <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="text-xs md:text-sm font-medium">Chat</span>
-        </button>
-        <button
-          onClick={() => setView('profile')}
-          className={`flex flex-col items-center gap-1 py-2 px-6 md:px-8 rounded-lg transition-colors hover:bg-gray-50 ${view === 'profile' ? 'text-blue-600' : 'text-gray-600'}`}
-        >
-          <User className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="text-xs md:text-sm font-medium">Profile</span>
-        </button>
+  // Top Navigation Bar (Web-first)
+  const TopNav = () => {
+    const CompanionAvatar = userProfile.companion === 'noah' ? NoahAvatar : NoeliaAvatar;
+    const companionName = userProfile.companion === 'noah' ? 'Noah' : 'Noelia';
+
+    return (
+      <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div className="px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left - Logo/Brand */}
+            <div className="flex items-center gap-3">
+              <CompanionAvatar size={40} />
+              <div>
+                <div className="font-bold text-lg text-gray-900">Noah GLP-1 Companion</div>
+                <div className="text-sm text-gray-600">Hey {userProfile.name}!</div>
+              </div>
+            </div>
+
+            {/* Center - Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setView('home')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'home'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Home className="w-5 h-5" />
+                Dashboard
+              </button>
+              <button
+                onClick={() => setView('progress')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'progress'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="w-5 h-5" />
+                Progress
+              </button>
+              <button
+                onClick={() => setView('chat')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'chat'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <MessageCircle className="w-5 h-5" />
+                Chat
+              </button>
+              <button
+                onClick={() => setView('profile')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'profile'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <User className="w-5 h-5" />
+                Settings
+              </button>
+            </div>
+
+            {/* Right - User Info */}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="font-medium">Dr. {companionName}</span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                {userProfile.dose}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Main Render
   return (
