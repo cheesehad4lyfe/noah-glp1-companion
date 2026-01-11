@@ -1290,13 +1290,11 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
-          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
-            <h1 className="text-3xl md:text-4xl font-bold">Progress & Dosing</h1>
-          </div>
-        </div>
-        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px] space-y-6">
+      <div className="min-h-screen bg-gray-50">
+        <div className="px-8 py-6 max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Progress & Dosing</h1>
+
+          <div className="space-y-6">
           {/* Weight Chart */}
           {weights.length >= 2 ? (
             <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
@@ -1396,6 +1394,7 @@ export default function App() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     );
@@ -1425,21 +1424,19 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20 flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
-          <div className="container mx-auto px-4 lg:px-8 max-w-[1400px] flex items-center gap-3 md:gap-4">
-            <AvatarComponent size={50} />
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="px-8 py-6 max-w-5xl mx-auto flex-1 w-full flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <AvatarComponent size={40} />
             <div>
-              <h1 className="text-xl md:text-2xl font-bold">Dr. {companionName}</h1>
-              <p className="text-sm md:text-base text-blue-100">Your GLP-1 companion</p>
+              <h1 className="text-2xl font-bold text-gray-900">Chat with Dr. {companionName}</h1>
+              <p className="text-sm text-gray-600">Ask questions about your GLP-1 journey</p>
             </div>
           </div>
-        </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1400px] space-y-4">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200 p-6 mb-4">
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {messages.length === 0 ? (
               // Empty State
               <div className="text-center py-12 md:py-16">
@@ -1486,28 +1483,29 @@ export default function App() {
                 <div ref={messagesEndRef} />
               </>
             )}
+            </div>
           </div>
-        </div>
 
-        {/* Input Area */}
-        <div className="bg-white border-t border-gray-200 p-4 md:p-6">
-          <div className="container mx-auto px-4 lg:px-8 max-w-[1400px] flex gap-2 md:gap-3">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={`Ask Dr. ${companionName} anything...`}
-              className="flex-1 px-4 md:px-6 py-3 md:py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-sm md:text-base"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!inputMessage.trim()}
-              className="bg-blue-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <Send className="w-5 h-5" />
-              <span className="hidden md:inline">Send</span>
-            </button>
+          {/* Input Area */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={`Ask Dr. ${companionName} anything...`}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputMessage.trim()}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+              >
+                <Send className="w-5 h-5" />
+                Send
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1557,15 +1555,10 @@ export default function App() {
     const weightLost = parseFloat(userProfile.currentWeight) - parseFloat(currentWeight);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pb-20">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 lg:p-6 shadow-lg">
-          <div className="container mx-auto px-4 lg:px-8 max-w-[1800px]">
-            <h1 className="text-2xl md:text-3xl font-bold">Settings & Profile</h1>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="px-8 py-6 max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings & Profile</h1>
 
-        <div className="container mx-auto px-4 lg:px-8 py-6 max-w-[1800px]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
@@ -1811,18 +1804,24 @@ export default function App() {
   // Main Render
   return (
     <>
-      {view === 'onboarding' && <Onboarding />}
-      {view === 'home' && <Home />}
-      {view === 'progress' && <Progress />}
-      {view === 'chat' && <Chat />}
-      {view === 'profile' && <Profile />}
-      {view !== 'onboarding' && <BottomNav />}
+      {view === 'onboarding' ? (
+        <Onboarding />
+      ) : (
+        <>
+          <TopNav />
+          {view === 'home' && <Home />}
+          {view === 'progress' && <Progress />}
+          {view === 'chat' && <Chat />}
+          {view === 'profile' && <Profile />}
+        </>
+      )}
+
       {showEndOfDayModal && <EndOfDayModal />}
       {showCalendar && <Calendar />}
       {showMilestone && <MilestoneModal />}
 
       {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+      <div className="fixed top-20 right-8 z-50 space-y-2 max-w-sm">
         {toasts.map(toast => (
           <div
             key={toast.id}
